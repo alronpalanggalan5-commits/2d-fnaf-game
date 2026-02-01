@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNAF 2D: The 10-Cam Challenge</title>
+    <style>
+        :root { --fnaf-red: #8b0000; --fnaf-green: #00ff41; }
+        body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; user-select: none; }
+        
+        /* Game Screen */
+        #game-view { width: 100vw; height: 100vh; position: relative; }
+
+        /* The Office */
+        #office { width: 100%; height: 100%; background: #1a1a1a; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+        .office-light { background: #333 !important; }
+
+        /* UI Elements */
+        .hud { position: absolute; top: 20px; left: 20px; z-index: 50; font-size: 1.5rem; text-shadow: 2px 2px #000; pointer-events: none; }
+        
+        /* Doors */
+        .door { position: absolute; width: 15%; height: 80%; background: #111; border: 4px solid #444; bottom: 10%; transition: 0.3s; }
+        .door-left { left: -15%; } .door-right { right: -15%; }
+        .door-closed { transform: translateX(100%); } /* Left door logic */
+        .door-left.active { left: 0; border-color: var(--fnaf-red); }
+        .door-right.active { right: 0; border-color: var(--fnaf-red); }
+
+        /* Camera Tablet */
+        #tablet { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; flex-direction: column; }
+        .cam-feed { flex-grow: 1; border: 15px solid #222; position: relative; display: flex; justify-content: center; align-items: center; font-size: 2rem; }
+        .static { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background: url('https://media.giphy.com/media/oEI9uWUic9VKM/giphy.gif'); pointer-events: none; }
+        
+        /* Cam Buttons */
+        .cam-menu { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 10px; background: #111; }
+        .cam-btn { padding: 15px; background: #333; color: white; border: 1px solid #555; cursor: pointer; text-align: center; }
+        .cam-btn.active { background: var(--fnaf-green); color: black; }
+
+        /* Toggle Button */
+        #toggle-cam { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 40px; background: rgba(255,255,255,0.2); border: 2px solid #fff; color: #fff; z-index: 150; cursor
