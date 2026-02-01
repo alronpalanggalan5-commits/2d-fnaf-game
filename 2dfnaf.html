@@ -3,37 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FNAF 2D: The 10-Cam Challenge</title>
+    <title>FNAF 2D - Fixed Visuals</title>
     <style>
-        :root { --fnaf-red: #8b0000; --fnaf-green: #00ff41; }
-        body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; user-select: none; }
+        :root { --fnaf-red: #ff4444; --fnaf-green: #00ff41; --bonnie-purple: #6a5acd; --chica-yellow: #ffd700; }
+        body { background: #000; color: #fff; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
         
-        /* Game Screen */
-        #game-view { width: 100vw; height: 100vh; position: relative; }
+        /* UI */
+        .hud { position: absolute; top: 20px; left: 20px; z-index: 50; background: rgba(0,0,0,0.5); padding: 10px; }
+        .clock { position: absolute; top: 20px; right: 20px; font-size: 2.5rem; font-weight: bold; }
 
         /* The Office */
-        #office { width: 100%; height: 100%; background: #1a1a1a; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
-        .office-light { background: #333 !important; }
+        #office { width: 100vw; height: 100vh; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #office.flashlight-on { background: #222; box-shadow: inset 0 0 100px rgba(255,255,255,0.1); }
 
-        /* UI Elements */
-        .hud { position: absolute; top: 20px; left: 20px; z-index: 50; font-size: 1.5rem; text-shadow: 2px 2px #000; pointer-events: none; }
+        /* Tablet View */
+        #tablet { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #050505; z-index: 100; flex-direction: column; }
+        .feed-window { flex-grow: 1; position: relative; border: 10px solid #222; overflow: hidden; display: flex; justify-content: center; align-items: center; }
         
-        /* Doors */
-        .door { position: absolute; width: 15%; height: 80%; background: #111; border: 4px solid #444; bottom: 10%; transition: 0.3s; }
-        .door-left { left: -15%; } .door-right { right: -15%; }
-        .door-closed { transform: translateX(100%); } /* Left door logic */
-        .door-left.active { left: 0; border-color: var(--fnaf-red); }
-        .door-right.active { right: 0; border-color: var(--fnaf-red); }
-
-        /* Camera Tablet */
-        #tablet { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; flex-direction: column; }
-        .cam-feed { flex-grow: 1; border: 15px solid #222; position: relative; display: flex; justify-content: center; align-items: center; font-size: 2rem; }
-        .static { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background: url('https://media.giphy.com/media/oEI9uWUic9VKM/giphy.gif'); pointer-events: none; }
+        /* Animatronic Visuals */
+        .ghost { width: 80px; height: 120px; border-radius: 40% 40% 10% 10%; position: absolute; display: none; transition: 0.3s; }
+        .eyes { position: absolute; top: 30px; width: 100%; display: flex; justify-content: space-around; }
+        .eye { width: 12px; height: 12px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
         
-        /* Cam Buttons */
-        .cam-menu { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 10px; background: #111; }
-        .cam-btn { padding: 15px; background: #333; color: white; border: 1px solid #555; cursor: pointer; text-align: center; }
-        .cam-btn.active { background: var(--fnaf-green); color: black; }
+        .bonnie { background: var(--bonnie-purple); left: 30%; }
+        .chica { background: var(--chica-yellow); right: 30%; }
 
-        /* Toggle Button */
-        #toggle-cam { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 40px; background: rgba(255,255,255,0.2); border: 2px solid #fff; color: #fff; z-index: 150; cursor
+        /* Scanline Effect */
+        .scanlines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; }
+
+        /* Controls */
+        .controls { position: absolute; bottom: 20%; display: flex; gap: 20px; z-index: 10; }
+        button { padding: 15px 25px; background: #333; color: #fff; border: 2px solid #555; cursor: pointer; font-family: inherit; font-size: 1rem; }
+        button.active { background: var(--fnaf-red); border-color: white; }
+        #toggle-tablet { position: absolute; bottom: 30px; width: 250px; left: 50%; transform: translateX(-50%); z-index: 110; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="game-view">
+    <div class="hud">
+        <div>POWER: <span id="pwr-val">100</span>%</div>
+        <div id="usage-text">Usage: ></div>
+    </div>
+    <div class="clock" id="clock-text">12 AM</div>
+
+    <div id="office">
+        <div id="win-screen" style="display:none; position:absolute; width:100%; height:100%; background:#000; color:var(--fnaf-green); z-index:500; flex-direction:column; justify-content:center; align-items:center;">
+            <h1 style="font-size: 5rem;">6:00 AM</h1>
+            <p>IT IS OVER.</p>
+            <button onclick="location.reload()">RESTART</button>
+        </div>
+
+        <div class="controls">
+            <button id="btn-l" onclick="toggleDoor('L')">LEFT DOOR</button>
+            <button onmousedown="toggleFlash(true)" onmouseup="toggleFlash(false)">FLASHLIGHT</button>
+            <button id="btn-r" onclick="toggleDoor('R')">RIGHT DOOR</button>
+        </div>
+    </div>
+
+    <button id="toggle-tablet" onclick="toggleTablet()">[ OPEN MONITOR ]</button>
+
+    <div id="tablet">
+        <div class="feed-window" id="cam-feed">
+            <div class="scanlines"></div>
+            <h2 style="position:absolute; top:20px; left:20px; color:rgba(255,255,255,0.5);" id="cam-id">CAM 01</h2>
+            
+            <div id="bonnie-img" class="ghost bonnie">
+                <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+            </div>
+            
+            <div id="chica-img" class="ghost chica">
+                <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+            </div>
+        </div>
+        <div id="cam-btns" style="display:grid; grid-template-columns: repeat(5,1fr); background:#111; padding:10px; gap:5px;"></div>
+    </div>
+</div>
+
+<script>
+    let power = 100, hour = 0, tabletOpen = false, currentCam = 1;
+    let doors = { L: false, R: false }, flashlight = false;
+    let bonniePos = 1, chicaPos = 1; // 1-10 is cameras, 11 is door
+
+    // Build Buttons
+    const btnBox = document.getElementById('cam-btns');
+    for(let i=1; i<=10; i++) {
+        let b = document.createElement('button');
+        b.innerText = "C" + i;
+        b.onclick = () => { currentCam = i; updateCams(); };
+        btnBox.appendChild(b);
+    }
+
+    function toggleTablet() {
+        tabletOpen = !tabletOpen;
+        document.getElementById('tablet').style.display = tabletOpen ? 'flex' : 'none';
+        updateCams();
+    }
+
+    function toggleDoor(side) {
+        doors[side] = !doors[side];
+        document.getElementById('btn-'+side.toLowerCase()).classList.toggle('active');
+    }
+
+    function toggleFlash(state) {
+        flashlight = state;
+        document.getElementById('office').classList.toggle('flashlight-on', state);
+    }
+
+    function updateCams() {
+        document.getElementById('cam-id').innerText = "CAM " + (currentCam < 10 ? "0"+currentCam : currentCam);
+        document.getElementById('bonnie-img').style.display = (bonniePos === currentCam) ? 'block' : 'none';
+        document.getElementById('chica-img').style.display = (chicaPos === currentCam) ? 'block' : 'none';
+    }
+
+    // Timer Loop
+    setInterval(() => {
+        hour++;
+        if(hour >= 6) { document.getElementById('win-screen').style.display = 'flex'; }
+        else { document.getElementById('clock-text').innerText = hour + " AM"; }
+    }, 60000);
+
+    // Logic Loop
+    setInterval(() => {
+        let usage = 1 + (tabletOpen?1:0) + (doors.L?1:0) + (doors.R?1:0) + (flashlight?1:0);
+        power -= (0.15 * usage);
+        document.getElementById('pwr-val').innerText = Math.max(0, Math.floor(power));
+        document.getElementById('usage-text').innerText = "Usage: " + ">".repeat(usage);
+
+        if(power <= 0) { alert("NO POWER. SHE IS HERE."); location.reload(); }
+
+        //
